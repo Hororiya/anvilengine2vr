@@ -1,0 +1,3 @@
+[submodule "extern/vrframework"]
+	path = extern/vrframework
+	url = git@github.com:mutars/vrframework.git
