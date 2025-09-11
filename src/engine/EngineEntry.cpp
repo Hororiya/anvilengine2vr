@@ -3,7 +3,7 @@
 #include "EngineCameraModule.h"
 #include "EngineRendererModule.h"
 #include "EngineTwicks.h"
-#include <engine/models/ModSettings.h>
+#include <ModSettings.h>
 #include <mods/VR.hpp>
 
 std::optional<std::string> EngineEntry::on_initialize()
