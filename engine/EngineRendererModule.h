@@ -1,9 +1,9 @@
 #pragma once
 
-#include <engine/memory/memory_mul.h>
+#include <engine/memory/offsets.h>
 #include <safetyhook/inline_hook.hpp>
 #include <utility/PointerHook.hpp>
-#include <utils/FunctionHook.h>
+#include <memory/FunctionHook.h>
 
 namespace sdk {
     typedef enum

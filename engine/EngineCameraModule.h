@@ -2,7 +2,7 @@
 
 #include <glm/detail/type_mat4x4.hpp>
 #include <safetyhook/inline_hook.hpp>
-#include <utils/FunctionHook.h>
+#include <memory/FunctionHook.h>
 
 namespace sdk
 {
