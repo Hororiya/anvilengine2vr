@@ -1,5 +1,5 @@
 #include "LuaModule.h"
-#include "engine/memory/memory_mul.h"
+#include "engine/memory/offsets.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>

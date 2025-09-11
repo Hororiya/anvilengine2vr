@@ -1,6 +1,6 @@
 #include "DLSSModule.h"
-#include <engine/memory/memory_mul.h>
 #include <ModSettings.h>
+#include <engine/memory/offsets.h>
 #include <mods/VR.hpp>
 #include <safetyhook/easy.hpp>
 #include <spdlog/fmt/bin_to_hex.h>
