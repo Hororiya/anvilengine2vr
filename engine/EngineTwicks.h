@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #define ENGINE_TWICKS_RUN_AND_LOG(FUNC)           \
     do {                                          \
         if (!(FUNC())) {                          \
