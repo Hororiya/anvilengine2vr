@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 
 project(
-  gow_vr
+  assasins_creed_valhalla_vr
   VERSION 1.0.0
   LANGUAGES C CXX
 )
@@ -15,9 +15,13 @@ set(CMAKE_OPTIMIZE_DEPENDENCIES ON)
 include(GNUInstallDirs)
 include(FetchContent)
 
-set(IMGUI_USER_CONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imgui/gow_imconfig.hpp")
+set(IMGUI_USER_CONFIG_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imconfig.hpp")
 FetchContent_Declare(vrframework SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/vrframework)
 FetchContent_MakeAvailable(vrframework)
+
+add_library(common INTERFACE)
+target_link_libraries(vr_framework PRIVATE common)
+
 
 file(
   GLOB_RECURSE
@@ -37,7 +41,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-target_link_libraries("${PROJECT_NAME}" PUBLIC vr_framework::vr_framework)
+target_link_libraries("${PROJECT_NAME}" PUBLIC common vr_framework::vr_framework)
 
 target_include_directories(
   ${PROJECT_NAME}
@@ -81,14 +85,16 @@ if(HOOK_METHOD STREQUAL "dinput8")
   set(OUTPUT_NAME "dinput8")
 elseif(HOOK_METHOD STREQUAL "dxgi")
   set(OUTPUT_NAME "dxgi")
-  add_compile_definitions(USE_DXGI_HOOK)
+  target_compile_definitions(common INTERFACE USE_DXGI_HOOK)
 elseif(HOOK_METHOD STREQUAL "PHYSX")
   set(OUTPUT_NAME "PhysX3Cooking_x64")
-  add_compile_definitions(USE_PHYSX_HOOK)
+  target_compile_definitions(common INTERFACE USE_PHYSX_HOOK)
+elseif(HOOK_METHOD STREQUAL "inject")
+  set(OUTPUT_NAME "vrmod")
 endif()
 
 if(SIGNATURE_SCAN)
-  add_compile_definitions(SIGNATURE_SCAN)
+  target_compile_definitions(common INTERFACE SIGNATURE_SCAN)
 endif()
 
 install(
@@ -108,16 +114,16 @@ add_custom_command(
   TARGET ${PROJECT_NAME}
   POST_BUILD
   COMMAND
-    ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/gowvr
+    ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/assasins_creed_valhalla_vr
   COMMAND
-    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/gowvr
+    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/assasins_creed_valhalla_vr
 )
 
 add_custom_command(
         TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND
-       ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "C:\\Program Files (x86)\\Steam\\steamapps\\common\\GodOfWar\\$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+       ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "C:\\UbisoftGames\\Assassin's Creed Valhalla\\$<TARGET_FILE_NAME:${PROJECT_NAME}>"
 )
 
 set_property(

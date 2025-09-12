@@ -6,19 +6,19 @@
 
 void EngineCameraModule::InstallHooks()
 {
-    spdlog::info("Installing EngineCameraModule hooks");
-
-    auto onCalcProjectionFN = memory::calc_projection_fn_addr();
-    m_onCalcProjection      = safetyhook::create_inline((void*)onCalcProjectionFN, (void*)&EngineCameraModule::onCalcProjection);
-    if (!m_onCalcProjection) {
-        spdlog::error("Failed to hook m_onCalcProjection");
-    }
-
-    auto calcFinalViewFn = memory::update_views_fn_addr();
-    m_onCalcFinalView = safetyhook::create_inline((void*)calcFinalViewFn, (void*)&EngineCameraModule::onCalcFinalView);
-    if (!m_onCalcFinalView) {
-        spdlog::error("Failed to hook m_onCalcFinalView");
-    }
+//    spdlog::info("Installing EngineCameraModule hooks");
+//
+//    auto onCalcProjectionFN = memory::calc_projection_fn_addr();
+//    m_onCalcProjection      = safetyhook::create_inline((void*)onCalcProjectionFN, (void*)&EngineCameraModule::onCalcProjection);
+//    if (!m_onCalcProjection) {
+//        spdlog::error("Failed to hook m_onCalcProjection");
+//    }
+//
+//    auto calcFinalViewFn = memory::update_views_fn_addr();
+//    m_onCalcFinalView = safetyhook::create_inline((void*)calcFinalViewFn, (void*)&EngineCameraModule::onCalcFinalView);
+//    if (!m_onCalcFinalView) {
+//        spdlog::error("Failed to hook m_onCalcFinalView");
+//    }
 }
 
 sdk::Matrix4x4* EngineCameraModule::onCalcProjection(sdk::CameraClient* a1, float aspectRatio, uint8_t bUseCustomAspectRatio, float customAspectRatioFactor, float nearZ,
