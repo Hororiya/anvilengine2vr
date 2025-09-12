@@ -1,6 +1,5 @@
 #include "EngineEntry.h"
-#include "DLSSModule.h"
-#include "EngineCameraModule.h"
+//#include "EngineCameraModule.h"
 #include "EngineRendererModule.h"
 #include "EngineTwicks.h"
 #include <ModSettings.h>
@@ -8,10 +7,10 @@
 
 std::optional<std::string> EngineEntry::on_initialize()
 {
-    DLSSModule::Get()->InstallHooks();
-    EngineTwicks::DisableBadEffects();
+//    DLSSModule::Get()->InstallHooks();
+//    EngineTwicks::DisableBadEffects();
     EngineRendererModule::Get()->InstallHooks();
-    EngineCameraModule::Get()->InstallHooks();
+//    EngineCameraModule::Get()->InstallHooks();
 //    UpscalerAfrNvidiaModule::Get();
     return Mod::on_initialize();
 }
