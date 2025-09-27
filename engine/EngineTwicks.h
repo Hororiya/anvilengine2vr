@@ -13,18 +13,11 @@ namespace EngineTwicks
 {
     bool DisableTAA();
     bool DisableLetterBox();
-    bool DisableJitter();
-    bool DisableDof();
-    bool DisableSharpness();
-    bool DisableNvidiaSupportCheck();
 
     inline void DisableBadEffects() {
         spdlog::info("Disabling bad effects");
         ENGINE_TWICKS_RUN_AND_LOG(DisableTAA);
         ENGINE_TWICKS_RUN_AND_LOG(DisableLetterBox);
-        ENGINE_TWICKS_RUN_AND_LOG(DisableJitter);
-        ENGINE_TWICKS_RUN_AND_LOG(DisableDof);
-        ENGINE_TWICKS_RUN_AND_LOG(DisableSharpness);
     }
 };
 

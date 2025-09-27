@@ -1,75 +1,177 @@
 #include "EngineCameraModule.h"
+#include "EngineEntry.h"
 #include "engine/memory/offsets.h"
+#include "sdk/ACVRGfxContext.h"
 #include <ModSettings.h>
 #include <mods/VR.hpp>
 #include <safetyhook/easy.hpp>
+#include <utility/ScopeProfiler.h>
 
 void EngineCameraModule::InstallHooks()
 {
-//    spdlog::info("Installing EngineCameraModule hooks");
-//
-//    auto onCalcProjectionFN = memory::calc_projection_fn_addr();
-//    m_onCalcProjection      = safetyhook::create_inline((void*)onCalcProjectionFN, (void*)&EngineCameraModule::onCalcProjection);
-//    if (!m_onCalcProjection) {
-//        spdlog::error("Failed to hook m_onCalcProjection");
-//    }
-//
-//    auto calcFinalViewFn = memory::update_views_fn_addr();
-//    m_onCalcFinalView = safetyhook::create_inline((void*)calcFinalViewFn, (void*)&EngineCameraModule::onCalcFinalView);
-//    if (!m_onCalcFinalView) {
-//        spdlog::error("Failed to hook m_onCalcFinalView");
-//    }
+    spdlog::info("Installing EngineCameraModule hooks");
+    //
+    auto onCalcProjectionFN = memory::calc_projection_fn_addr();
+    m_onCalcProjection      = safetyhook::create_inline((void*)onCalcProjectionFN, (void*)&EngineCameraModule::onCalcProjection);
+    if (!m_onCalcProjection) {
+        spdlog::error("Failed to hook m_onCalcProjection");
+    }
+
+    auto calcFinalViewFn = memory::update_views_fn_addr();
+    m_onCalcFinalView    = safetyhook::create_inline((void*)calcFinalViewFn, (void*)&EngineCameraModule::onCalcFinalView);
+    if (!m_onCalcFinalView) {
+        spdlog::error("Failed to hook m_onCalcFinalView");
+    }
+    auto onCopyGfxContextFn = memory::on_gfx_context_copy();
+    m_onCopyGfxContext      = safetyhook::create_inline((void*)onCopyGfxContextFn, (void*)&EngineCameraModule::onCopyGfxContext);
+    if (!m_onCopyGfxContext) {
+        spdlog::error("Failed to hook m_onCopyGfxContext");
+    }
+
+    //    auto onCameraGetRotationQuatHookFn = memory::on_camera_get_rotation_quat_addr();
+    //    m_onCameraGetRotationQuatHook      = safetyhook::create_inline((void*)onCameraGetRotationQuatHookFn, (void*)&EngineCameraModule::onCameraGetRotationQuatHook);
+    //    if (!m_onCameraGetRotationQuatHook) {
+    //        spdlog::error("Failed to hook m_onCameraGetRotationQuatHook");
+    //    }
+
+    auto onCameraGetForwardHookFn = memory::camera_node_get_forward_addr();
+    m_onCameraGetForwardHook      = safetyhook::create_inline((void*)onCameraGetForwardHookFn, (void*)&EngineCameraModule::onCameraGetForwardHook);
+    if (!m_onCameraGetForwardHook) {
+        spdlog::error("Failed to hook m_onCameraGetForwardHook");
+    }
+
+    auto calcUIViewportFn  = memory::calc_ui_viewport_addr();
+    m_onCalcUIViewportHook = safetyhook::create_inline((void*)calcUIViewportFn, (void*)&EngineCameraModule::onCalcUIViewportHook);
+    if (!m_onCalcUIViewportHook) {
+        spdlog::error("Failed to hook m_onCalcUIViewportHook");
+    }
 }
 
-sdk::Matrix4x4* EngineCameraModule::onCalcProjection(sdk::CameraClient* a1, float aspectRatio, uint8_t bUseCustomAspectRatio, float customAspectRatioFactor, float nearZ,
-                                                     float farZ, float viewportWidth, float viewportHeight, uint8_t bSomeFlag, sdk::Matrix4x4* outProjMatrix,
-                                                     sdk::Matrix4x4* outInvProjMatrix, float* outTanHalfFovX, float* outTanHalfFovY, sdk::Matrix4x4* outJitterMatrix)
+void EngineCameraModule::onCalcProjection(glm::mat4* outProjMatrix, float nearPlane, float farPlane, float fov, float aspectRatio, sdk::Viewport* viewport)
 {
-    static auto instance = EngineCameraModule::Get();
-
-    auto result = instance->m_onCalcProjection.call<sdk::Matrix4x4*>(a1, aspectRatio, bUseCustomAspectRatio, customAspectRatioFactor, nearZ, farZ, viewportWidth, viewportHeight,
-                                                                     bSomeFlag, outProjMatrix, outInvProjMatrix, outTanHalfFovX, outTanHalfFovY, outJitterMatrix);
-
-    static auto vr = VR::get();
-    if (!vr->is_hmd_active()) {
-        return result;
+    SCOPE_PROFILER();
+    static auto instance     = Get();
+    static auto vr           = VR::get();
+    static auto g_current_ui = (uintptr_t**)memory::g_current_ui_pointer_addr();
+    instance->m_onCalcProjection.call<void>(outProjMatrix, nearPlane, farPlane, fov, aspectRatio, viewport);
+    if (vr->is_hmd_active() && farPlane > 1201.f) {
+        auto      frustum    = vr->get_runtime()->frustums[0];
+        float     sum_rl     = (frustum[1] + frustum[0]);
+        float     sum_tb     = (frustum[2] + frustum[3]);
+        float     inv_rl     = (1.0f / (frustum[1] - frustum[0]));
+        float     inv_tb     = (1.0f / (frustum[2] - frustum[3]));
+        auto projection = Matrix4x4f {
+            2.0f*inv_rl,   0.0f,          0.0f,                                              0.0f,
+            0.0f,          2.0f*inv_tb,   0.0f,                                              0.0f,
+            sum_rl*inv_rl, sum_tb*inv_tb, farPlane/(nearPlane-farPlane),                    -1.0f,
+            0.0f,          0.0f,          (nearPlane*farPlane)/(nearPlane-farPlane),         0.0f
+        };
+        *outProjMatrix       = projection;
     }
-    if (a1 && a1->pViewport->orpho) {
-        auto scale_factor = ModSettings::g_UISettings.hudScale;
-        outProjMatrix->row[0][0] *= scale_factor;
-        outProjMatrix->row[1][1] *= scale_factor;
-        outProjMatrix->row[3][1] += ModSettings::g_UISettings.hudVerticalOffset;
-        auto invViewProj  = glm::inverse(*(glm::mat4*)outProjMatrix);
-        *outInvProjMatrix = *(sdk::Matrix4x4*)&invViewProj;
+}
+
+const glm::mat4 Y_UP_TO_Z_UP_BASIS(1.0f, 0.0f, 0.0f, 0.0f,
+                                   0.0f, 0.0f, 1.0f, 0.0f,
+                                   0.0f, -1.0f, 0.0f, 0.0f,
+                                   0.0f, 0.0f, 0.0f, 1.0f);
+
+const glm::mat4 INV_UP_TO_Z_UP_BASIS = glm::inverse(Y_UP_TO_Z_UP_BASIS);
+
+uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out_textureId, float* out_textureScaleBias, float* out_viewport, float* out_scissorRect,
+                                              float* out_scissorRectInt, float* out_scissorScale, float* projectionParams, glm::mat4* in_viewMatrix,
+                                              glm::mat4* out_viewProjectionMatrix, glm::mat4* out_projectionMatrix, glm::mat4* out_inverseViewMatrix,
+                                              glm::mat4* out_inverseProjectionMatrix, glm::mat4* out_worldToViewMatrix, float InFov, float* out_AspectRatio, float nearPlane,
+                                              float farPlane, glm::mat4* out_frustumPlanes, struct GlobalGfxConstants* pGlobalConstants)
+{
+    SCOPE_PROFILER();
+    static auto instance     = Get();
+    static auto vr           = VR::get();
+    static auto g_current_ui = (uintptr_t**)memory::g_current_ui_pointer_addr();
+    bool        bIsShowingUI = *g_current_ui;
+    if (vr->is_hmd_active() && !bIsShowingUI) {
+        auto        eye           = vr->get_current_eye_transform();
+        static auto hmd_transform = vr->get_transform(0);
+        if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
+            hmd_transform = vr->get_transform(0);
+        }
+        auto rotation_offset = glm::mat4_cast(glm::quat(vr->get_rotation_offset()));
+        rotation_offset[3]   = vr->get_standing_origin();
+        auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
+        *in_viewMatrix       = *in_viewMatrix * transform;
+        static glm::mat4 copies[2]{ glm::mat4{ 1.0 }, glm::mat4{ 1.0 } };
+        auto             frame = vr->m_presenter_frame_count;
+        copies[frame % 2]      = *in_viewMatrix;
+        if (context->pOverrideViewMatrix) {
+            context->pastViewMatrix = *in_viewMatrix;
+        }
     }
-    else {
-        vr->m_nearz       = std::fabs(nearZ);
-        vr->m_farz        = std::fabs(farZ);
-        auto proj         = vr->get_current_projection_matrix();
-        *outTanHalfFovX   = 1.0f / proj[0][0];
-        *outTanHalfFovY   = 1.0f / proj[1][1];
-        *outProjMatrix    = *(sdk::Matrix4x4*)&proj;
-        auto invProj      = glm::inverse(proj);
-        *outInvProjMatrix = *(sdk::Matrix4x4*)&invProj;
-        static glm::mat4 identity{ 1.0f };
-        *outJitterMatrix = *(sdk::Matrix4x4*)&identity;
+    return instance->m_onCalcFinalView.call<uintptr_t>(context, out_textureId, out_textureScaleBias, out_viewport, out_scissorRect, out_scissorRectInt, out_scissorScale,
+                                                       projectionParams, in_viewMatrix, out_viewProjectionMatrix, out_projectionMatrix, out_inverseViewMatrix,
+                                                       out_inverseProjectionMatrix, out_worldToViewMatrix, InFov, out_AspectRatio, nearPlane, farPlane, out_frustumPlanes,
+                                                       pGlobalConstants);
+}
+
+uintptr_t EngineCameraModule::onCopyGfxContext(sdk::GfxContext* context, glm::mat4* viewMatrix)
+{
+    SCOPE_PROFILER();
+    static auto      instance = Get();
+    static auto      vr       = VR::get();
+    static glm::mat4 copies[2]{ glm::mat4{ 1.0 }, glm::mat4{ 1.0 } };
+    auto             result = instance->m_onCopyGfxContext.call<uintptr_t>(context, viewMatrix);
+
+    auto frame              = vr->m_presenter_frame_count;
+    copies[frame % 2]       = context->pastViewMatrix;
+    context->pastViewMatrix = copies[(frame - 1) % 2];
+    return result;
+}
+
+// THIS ONE S WORKING
+// uintptr_t EngineCameraModule::onCameraGetRotationQuatHook(uintptr_t g, glm::vec4* pos, glm::quat* rot, float* a4)
+//{
+//    static auto vr = VR::get();
+//    static auto instance = Get();
+//    auto result = instance->m_onCameraGetRotationQuatHook.call<uintptr_t>(g, pos, rot, a4);
+//    if(vr->is_hmd_active()) {
+//        static auto hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
+//        if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
+//            hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
+//        }
+//        *rot = (*rot) * glm::quat{hmd_rotation.w, hmd_rotation.x, -hmd_rotation.z, hmd_rotation.y};
+//    }
+//    return result;
+//}
+
+glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm::vec4* forward)
+{
+    static auto vr       = VR::get();
+    static auto instance = Get();
+    auto        result   = instance->m_onCameraGetForwardHook.call<glm::vec4*>(node, forward);
+    if (vr->is_hmd_active()) {
+        static auto hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
+        if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
+            hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
+        }
+        auto rotation = vr->get_rotation_offset() * hmd_rotation;
+        rotation      = glm::quat{ rotation.w, rotation.x, -rotation.z, rotation.y };
+        *forward      = node->prevRotation * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
     }
     return result;
 }
 
-void EngineCameraModule::onCalcFinalView(sdk::CameraBlender* a1)
+void EngineCameraModule::onCalcUIViewportHook()
 {
-    static auto instance = EngineCameraModule::Get();
-    instance->m_onCalcFinalView.call<void>(a1);
-    static auto vr = VR::get();
-    if (!vr->is_hmd_active()) {
-        return;
+    static auto instance = Get();
+    static auto vr       = VR::get();
+    instance->m_onCalcUIViewportHook.call<void>();
+    static auto ui_vp = reinterpret_cast<sdk::Viewport*>(memory::g_ui_viewport_addr());
+    if (vr->is_hmd_active()) {
+        float totalWidth  = ui_vp->left * 2.f + ui_vp->right;
+        float totalHeight = ui_vp->top * 2.f + ui_vp->bottom;
+        float scaleX      = ModSettings::g_UISettings.hudScale;
+        float scaleY      = scaleX / (1920.f / 1080.f);
+        ui_vp->left       = (totalWidth - (totalWidth * scaleX)) / 2.f;
+        ui_vp->right      = totalWidth * scaleX;
+        ui_vp->top        = (totalHeight - (totalHeight * scaleY)) / 2.f;
+        ui_vp->bottom     = totalHeight * scaleY;
     }
-    auto        eye           = vr->get_current_eye_transform();
-    static auto hmd_transform = vr->get_transform(0);
-    if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
-        hmd_transform = vr->get_transform(0);
-    }
-    auto transform = *(glm::mat4*)&a1->view * hmd_transform * eye;
-    a1->view       = *(sdk::Matrix4x4*)&transform;
 }

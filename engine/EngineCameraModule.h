@@ -1,54 +1,17 @@
 #pragma once
 
 #include <glm/detail/type_mat4x4.hpp>
-#include <safetyhook/inline_hook.hpp>
+#include <glm/detail/type_quat.hpp>
+#include <glm/fwd.hpp>
 #include <memory/FunctionHook.h>
+#include <safetyhook/inline_hook.hpp>
 
-namespace sdk
-{
-
-    struct Matrix4x4
-    {
-        glm::vec4 row[4];
-    };
-
-    struct Viewport
-    {
-        char    pad[0xAF];
-        uint8_t orpho;
-    };
-
-    static_assert(offsetof(Viewport, orpho) == 0xAF, "Viewport::orpho offset is incorrect");
-
-    struct CameraClient
-    {
-        void*          __vtbl;
-        char           pad8[48];
-        char*          name;
-        char           pad40[18];
-        uint16_t       flags;
-        char           pad58[300];
-        sdk::Viewport* pViewport;
-        uint8_t        flag;
-        char           pad190[23];
-        float          perspectiveFov;
-        float          orphoFov;
-    };
-
-    static_assert(offsetof(CameraClient, pViewport) == 0x180, "CameraObj::pViewport offset is incorrect");
-
-    struct CameraBlender
-    {
-        void*     __vtbl;
-        char      pad8[0xAA0 - 8];
-        Matrix4x4 view;
-        Matrix4x4 viewCopy;
-    };
-
-    static_assert(offsetof(CameraBlender, view) == 0xAA0, "CameraBlender::view offset is incorrect");
-
-} // namespace sdk
-
+namespace sdk {
+    struct GfxContext;
+    struct Viewport;
+    struct CameraNode;
+    struct GlobalGfxConstants;
+}
 class EngineCameraModule
 {
 public:
@@ -66,11 +29,46 @@ private:
 
     safetyhook::InlineHook m_onCalcProjection{};
     safetyhook::InlineHook m_onCalcFinalView{};
+    safetyhook::InlineHook m_onCameraGetRotationQuatHook{};
+    safetyhook::InlineHook m_onCameraGetAdditionalRotationQuatHook{};
+    safetyhook::InlineHook m_onCameraUpdateCoreHook{};
+    safetyhook::InlineHook m_onCameraGetForwardHook{};
+    safetyhook::InlineHook m_onSetScissorsHook{};
+    safetyhook::InlineHook m_onCalcUIViewportHook{};
+    safetyhook::InlineHook m_onCopyGfxContext{};
 
 public:
-    static sdk::Matrix4x4* onCalcProjection(sdk::CameraClient* a1, float aspectRatio, uint8_t bUseCustomAspectRatio, float customAspectRatioFactor, float nearZ, float farZ,
-                                            float viewportWidth, float viewportHeight, uint8_t bSomeFlag, sdk::Matrix4x4* outProjMatrix, sdk::Matrix4x4* outInvProjMatrix,
-                                            float* outTanHalfFovX, float* outTanHalfFovY, sdk::Matrix4x4* outJitterMatrix);
+    static void onCalcProjection(glm::mat4 *out_projectionMatrix,
+                                 float nearPlane,
+                                 float farPlane,
+                                 float fov,
+                                 float aspectRatio,
+                                 sdk::Viewport* viewport);
 
-    static void onCalcFinalView(sdk::CameraBlender* a1);
+    static glm::vec4* onCameraGetForwardHook(sdk::CameraNode* node, glm::vec4 *forward);
+
+    static uintptr_t onCopyGfxContext(sdk::GfxContext* context, glm::mat4* viewMatrix);
+
+    static void onCalcUIViewportHook();
+
+    static uintptr_t onCalcFinalView(sdk::GfxContext* context,
+                                     int *out_textureId,
+                                     float *out_textureScaleBias,
+                                     float *out_viewport,
+                                     float *out_scissorRect,
+                                     float *out_scissorRectInt,
+                                     float *out_scissorScale,
+                                     float *projectionParams,
+                                     glm::mat4 *in_viewMatrix,
+                                     glm::mat4 *out_viewProjectionMatrix,
+                                     glm::mat4 *out_projectionMatrix,
+                                     glm::mat4 *out_inverseViewMatrix,
+                                     glm::mat4 *out_inverseProjectionMatrix,
+                                     glm::mat4 *out_worldToViewMatrix,
+                                     float InFov,
+                                     float *out_AspectRatio,
+                                     float nearPlane,
+                                     float farPlane,
+                                     glm::mat4 *out_frustumPlanes,
+                                     struct GlobalGfxConstants *pGlobalConstants);
 };
