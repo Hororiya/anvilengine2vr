@@ -21,9 +21,9 @@ bool verifyLeftHandedCoordinates() {
 }
 
 void InitThread(HINSTANCE hModule) {
+    EngineTwicks::DisableBadEffects();
     Sleep(5000);
     g_framework = std::make_unique<Framework>(hModule);
-//    EngineTwicks::DisableNvidiaSupportCheck();
 #ifdef GLM_FORCE_LEFT_HANDED
     spdlog::info("GLM_FORCE_LEFT_HANDED is defined function={} clip={}", verifyLeftHandedCoordinates(), GLM_CONFIG_CLIP_CONTROL);
     assert(verifyLeftHandedCoordinates());

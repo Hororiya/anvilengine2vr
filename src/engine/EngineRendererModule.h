@@ -16,6 +16,8 @@ private:
     ~EngineRendererModule() = default;
 
     safetyhook::InlineHook m_beginEngineFrameHook{};
+    safetyhook::InlineHook m_beginRenderFrameHook{};
 
-    static uintptr_t on_begin_engine_frame(struct GlobalContext*);
+    static uintptr_t on_begin_engine_frame();
+    static uintptr_t on_begin_render_frame(struct GlobalContext*);
 };
