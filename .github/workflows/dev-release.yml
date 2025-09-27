@@ -53,11 +53,11 @@ jobs:
           
           # Copy OpenXR release files
           Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.dll" "${{github.workspace}}/package-openxr/"
-          Copy-Item "${{github.workspace}}/shipping/openxr_loader.dll" "${{github.workspace}}/package-openxr/"
+#          Copy-Item "${{github.workspace}}/extern/vrframework/shipping/openxr_loader.dll" "${{github.workspace}}/package-openxr/"
           
           # Copy OpenVR release files
           Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.dll" "${{github.workspace}}/package-openvr/"
-          Copy-Item "${{github.workspace}}/shipping/openvr_api.dll" "${{github.workspace}}/package-openvr/"
+          Copy-Item "${{github.workspace}}/extern/vrframework/shipping/openvr_api.dll" "${{github.workspace}}/package-openvr/"
           
           # Copy debug symbols
           # Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.pdb" "${{github.workspace}}/symbols/"
