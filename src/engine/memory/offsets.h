@@ -18,72 +18,50 @@ namespace memory
         return addr;
     }
 
-    inline uintptr_t begin_engine_frame_fn_addr()
-    {
-        return (uintptr_t) g_mod + 0x10f46f0;
-    }
-
-    inline uintptr_t begin_render_frame_fn_addr()
-    {
-        return (uintptr_t) g_mod + 0x10f4db0;
-    }
-
     inline uintptr_t calc_projection_fn_addr() {
-        return (uintptr_t) g_mod + 0x817110;
+        return (uintptr_t) g_mod + 0xbd325a0;
     }
 
-    inline uintptr_t update_views_fn_addr() {
-        return (uintptr_t) g_mod + 0x8b8fc0;
-    }
-
-    inline uintptr_t on_camera_get_rotation_quat_addr() {
-        return (uintptr_t) g_mod + 0x1236d80;
-    }
-
-    inline uintptr_t additional_rotation_quat_addr() {
-        return (uintptr_t) g_mod + 0x12d55c0;
-    }
-
-    inline uintptr_t camera_update_core_fn_addr() {
-        return (uintptr_t) g_mod + 0x1295b40;
-    }
-
-    inline uintptr_t onSetScissors_fn_addr() {
-        return (uintptr_t) g_mod + 0x7faa60;
+    inline uintptr_t on_calc_mvp_fn_addr() {
+        return (uintptr_t) g_mod + 0xbdff5b0;
     }
 
     inline uintptr_t on_begin_frame_fn_addr() {
-        return (uintptr_t) g_mod + 0x15e2810;
+        // unconfirmed
+        return (uintptr_t) g_mod + 0x1a037e0;
     }
 
-    inline uintptr_t on_gfx_context_copy() {
-        return (uintptr_t) g_mod + 0x8b0550;
+    inline uintptr_t on_task_fn_addr() {
+//        return (uintptr_t) g_mod + 0xad44120;
+        return (uintptr_t) g_mod + 0xa4a250;
     }
 
-    inline uintptr_t on_taa_pass_addr() {
-        return (uintptr_t) g_mod + 0x17345e0;
-    }
-
-    inline uintptr_t on_set_resource_barriers_addr() {
-        return (uintptr_t) g_mod + 0x7d3540;
+    inline uintptr_t on_frame_fn_addr() {
+        // unconfirmed
+//        return (uintptr_t) g_mod + 0xa4a250;
+        return (uintptr_t) g_mod + 0x1922810;
     }
 
     inline uintptr_t g_current_ui_pointer_addr() {
-        return (uintptr_t) g_mod + 0x62c1bc0;
+        return (uintptr_t) g_mod + 0x50A0D38;
+    }
+
+    inline uintptr_t g_hud_overlay_pointer() {
+        return (uintptr_t) g_mod + 0x56c0cd0;
     }
 
     /*
      * get forward vector from camera node for aiming calculations
      */
     inline uintptr_t camera_node_get_forward_addr() {
-        return (uintptr_t) g_mod + 0x12d6400;
+        return (uintptr_t) g_mod + 0xf644470;
     }
 
     inline uintptr_t calc_ui_viewport_addr() {
-        return (uintptr_t) g_mod + 0x853fd0;
+        return (uintptr_t) g_mod + 0xbcdf9f0;
     }
 
     inline uintptr_t g_ui_viewport_addr() {
-        return (uintptr_t) g_mod + 0x502b8a8;
+        return (uintptr_t) g_mod + 0x49e9898;
     }
 }

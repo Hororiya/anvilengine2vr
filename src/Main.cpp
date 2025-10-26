@@ -21,7 +21,7 @@ bool verifyLeftHandedCoordinates() {
 }
 
 void InitThread(HINSTANCE hModule) {
-    EngineTwicks::DisableBadEffects();
+//    EngineTwicks::DisableBadEffects();
     Sleep(5000);
     g_framework = std::make_unique<Framework>(hModule);
 #ifdef GLM_FORCE_LEFT_HANDED

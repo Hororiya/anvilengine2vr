@@ -1,7 +1,9 @@
 #include "EngineEntry.h"
 #include "EngineCameraModule.h"
 #include "EngineRendererModule.h"
+#include <ModConfig.h>
 #include <ModSettings.h>
+#include <engine/memory/offsets.h>
 #include <mods/VR.hpp>
 
 std::optional<std::string> EngineEntry::on_initialize()
@@ -17,19 +19,23 @@ void EngineEntry::on_draw_ui()
         return;
     }
 
-    if (m_hud_scale->draw("HUD Scale")) {
+    if (m_hud_scaleX->draw("HUD Scale X")) {
         update(true);
     }
-    //
-    //    if(m_tone_map_algorithm->draw("Tone Map Algorithm"))
-    //    {
-    //        update(true);
-    //    }
-    //
-    //    if(m_tone_map_exposure->draw("Tone Map Exposure"))
-    //    {
-    //        update(true);
-    //    }
+
+    if (m_hud_scaleY->draw("HUD Scale Y")) {
+        update(true);
+    }
+
+    if(m_tone_map_algorithm->draw("Tone Map Algorithm"))
+    {
+        update(true);
+    }
+
+    if(m_tone_map_exposure->draw("Tone Map Exposure"))
+    {
+        update(true);
+    }
 }
 
 void EngineEntry::on_config_load(const utility::Config& cfg, bool set_defaults)
@@ -49,5 +55,8 @@ void EngineEntry::on_config_save(utility::Config& cfg)
 
 void EngineEntry::update(bool force)
 {
-    ModSettings::g_UISettings.hudScale = m_hud_scale->value();
+    ModSettings::g_ac_odyssey_ui_settings.hudScaleX = m_hud_scaleX->value();
+    ModSettings::g_ac_odyssey_ui_settings.hudScaleY = m_hud_scaleY->value();
+    ModSettings::g_internalSettings.toneMapAlg = m_tone_map_algorithm->value();
+    ModSettings::g_internalSettings.toneMapExposure = m_tone_map_exposure->value();
 }

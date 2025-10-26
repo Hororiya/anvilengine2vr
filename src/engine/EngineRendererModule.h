@@ -1,6 +1,12 @@
 #pragma once
 
 #include <safetyhook/inline_hook.hpp>
+
+namespace sdk
+{
+    struct Task;
+} // namespace sdk
+
 class EngineRendererModule
 {
 public:
@@ -17,7 +23,9 @@ private:
 
     safetyhook::InlineHook m_beginEngineFrameHook{};
     safetyhook::InlineHook m_beginRenderFrameHook{};
+    safetyhook::InlineHook m_taskHook{};
 
-    static uintptr_t on_begin_engine_frame();
-    static uintptr_t on_begin_render_frame(struct GlobalContext*);
+    static uintptr_t on_begin_engine_frame(uintptr_t, uintptr_t);
+    static uintptr_t on_begin_render_frame(uintptr_t, uintptr_t, uintptr_t);
+    static uintptr_t on_task(uintptr_t/*, sdk::Task* task*/);
 };
