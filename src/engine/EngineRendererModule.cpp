@@ -88,30 +88,27 @@ uintptr_t EngineRendererModule::on_task(uintptr_t a1)
 {
     auto task = reinterpret_cast<sdk::Task*>(a1);
     static auto vr           = VR::get();
-
-//    static auto instance = Get();
-    if(task && task->pName) {
-//        spdlog::info("EngineRendererModule::on_task {}", task->pName);
-        if(strcmp(task->pName, "BeginFrame") == 0) {
-            if (g_framework->is_ready()) {
-                vr->m_engine_frame_count++;
-                vr->on_engine_tick(nullptr);
-                g_framework->enable_engine_thread();
-                g_framework->run_imgui_frame(false);
-            }
-            if (g_framework->is_ready()) {
-                vr->m_render_frame_count = vr->m_engine_frame_count;
-                vr->on_begin_rendering(nullptr);
-            }
-        } else if(strcmp(task->pName, "BeginGraphicFrame") == 0) {
-
-        } else if (strcmp(task->pName, "ViewPreRender") == 0) {
-            vr->m_presenter_frame_count = vr->m_render_frame_count;
-        }
+    static uintptr_t pBeginFrame = 0;
+    static uintptr_t pViewPreRender = 0;
+    if(!pBeginFrame && task && task->pName && strcmp(task->pName, "BeginFrame") == 0) {
+        pBeginFrame = a1;
     }
-    auto result = original_on_task(a1);
-//    if(task && task->pName) {
-//        spdlog::info("EngineRendererModule::on_task exit {}", task->pName);
-//    }
-    return result;
+    else if(!pViewPreRender && task && task->pName && strcmp(task->pName, "ViewPreRender") == 0) {
+        pViewPreRender = a1;
+    }
+
+    if(pBeginFrame && pBeginFrame == a1) {
+        if (g_framework->is_ready()) {
+            vr->m_engine_frame_count++;
+            vr->on_engine_tick(nullptr);
+            g_framework->enable_engine_thread();
+            g_framework->run_imgui_frame(false);
+
+            vr->m_render_frame_count = vr->m_engine_frame_count;
+            vr->on_begin_rendering(nullptr);
+        }
+    } else if(pViewPreRender && pViewPreRender == a1) {
+        vr->m_presenter_frame_count = vr->m_render_frame_count;
+    }
+    return original_on_task(a1);
 }
