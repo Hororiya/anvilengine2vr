@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} SHARED ${headers} ${sources})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 #target_compile_definitions(common INTERFACE DEBUG_PROFILING_ENABLED)
+target_compile_definitions(common INTERFACE MOD_OPENXR_ONE_FRAME_OFF)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_link_libraries("${PROJECT_NAME}" PUBLIC common vr_framework::vr_framework)
