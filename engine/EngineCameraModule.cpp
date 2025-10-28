@@ -2,6 +2,7 @@
 #include "EngineEntry.h"
 #include "engine/memory/offsets.h"
 #include "sdk/ACVRGfxContext.h"
+#include <ModConfig.h>
 #include <ModSettings.h>
 #include <mods/VR.hpp>
 #include <safetyhook/easy.hpp>
@@ -167,8 +168,8 @@ void EngineCameraModule::onCalcUIViewportHook()
     if (vr->is_hmd_active()) {
         float totalWidth  = ui_vp->left * 2.f + ui_vp->right;
         float totalHeight = ui_vp->top * 2.f + ui_vp->bottom;
-        float scaleX      = ModSettings::g_UISettings.hudScale;
-        float scaleY      = scaleX / (1920.f / 1080.f);
+        float scaleX      = ModSettings::g_ac_valhalla_ui_settings.hudScaleX;
+        float scaleY      = ModSettings::g_ac_valhalla_ui_settings.hudScaleY;
         ui_vp->left       = (totalWidth - (totalWidth * scaleX)) / 2.f;
         ui_vp->right      = totalWidth * scaleX;
         ui_vp->top        = (totalHeight - (totalHeight * scaleY)) / 2.f;

@@ -1,6 +1,7 @@
 #include "EngineEntry.h"
 #include "EngineCameraModule.h"
 #include "EngineRendererModule.h"
+#include <ModConfig.h>
 #include <ModSettings.h>
 #include <mods/VR.hpp>
 
@@ -17,9 +18,15 @@ void EngineEntry::on_draw_ui()
         return;
     }
 
-    if (m_hud_scale->draw("HUD Scale")) {
+
+    if (m_hud_scaleX->draw("HUD Scale X")) {
         update(true);
     }
+
+    if (m_hud_scaleY->draw("HUD Scale Y")) {
+        update(true);
+    }
+
     //
     //    if(m_tone_map_algorithm->draw("Tone Map Algorithm"))
     //    {
@@ -49,5 +56,6 @@ void EngineEntry::on_config_save(utility::Config& cfg)
 
 void EngineEntry::update(bool force)
 {
-    ModSettings::g_UISettings.hudScale = m_hud_scale->value();
+    ModSettings::g_ac_valhalla_ui_settings.hudScaleX = m_hud_scaleX->value();
+    ModSettings::g_ac_valhalla_ui_settings.hudScaleY = m_hud_scaleY->value();
 }
