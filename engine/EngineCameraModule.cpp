@@ -78,6 +78,15 @@ const glm::mat4 Y_UP_TO_Z_UP_BASIS(1.0f, 0.0f, 0.0f, 0.0f,
 
 const glm::mat4 INV_UP_TO_Z_UP_BASIS = glm::inverse(Y_UP_TO_Z_UP_BASIS);
 
+void removePitchFromZUpMatrix(glm::mat4& transform) {
+    // Remove y component and normalize so we have the facing direction
+    const auto forward_dir = glm::normalize(Vector3f{ -transform[1].x, 0.0, -transform[1].y });
+
+    auto result = Y_UP_TO_Z_UP_BASIS * glm::lookAtRH(Vector3f{}, Vector3f{ forward_dir }, Vector3f(0.0f, 1.0f, 0.0f)) * INV_UP_TO_Z_UP_BASIS;
+    result[3] = transform[3];
+    transform = result;
+}
+
 uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out_textureId, float* out_textureScaleBias, float* out_viewport, float* out_scissorRect,
                                               float* out_scissorRectInt, float* out_scissorScale, float* projectionParams, glm::mat4* in_viewMatrix,
                                               glm::mat4* out_viewProjectionMatrix, glm::mat4* out_projectionMatrix, glm::mat4* out_inverseViewMatrix,
@@ -98,6 +107,9 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
         auto rotation_offset = glm::mat4_cast(glm::quat(vr->get_rotation_offset()));
         rotation_offset[3]   = vr->get_standing_origin();
         auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
+        if(ModSettings::g_ac_valhalla_settings.decoupledPitch) {
+            removePitchFromZUpMatrix(*in_viewMatrix);
+        }
         *in_viewMatrix       = *in_viewMatrix * transform;
         static glm::mat4 copies[2]{ glm::mat4{ 1.0 }, glm::mat4{ 1.0 } };
         auto             frame = vr->m_presenter_frame_count;
@@ -154,7 +166,13 @@ glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm
         }
         auto rotation = vr->get_rotation_offset() * hmd_rotation;
         rotation      = glm::quat{ rotation.w, rotation.x, -rotation.z, rotation.y };
-        *forward      = node->prevRotation * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
+        auto original_rotation_quat = node->prevRotation;
+        if(ModSettings::g_ac_valhalla_settings.decoupledPitch) {
+            auto original_rotation = glm::mat4_cast(glm::normalize(node->prevRotation));
+            removePitchFromZUpMatrix(original_rotation);
+            original_rotation_quat = glm::normalize(glm::quat_cast(original_rotation));
+        }
+        *forward = original_rotation_quat * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
     }
     return result;
 }
@@ -168,8 +186,8 @@ void EngineCameraModule::onCalcUIViewportHook()
     if (vr->is_hmd_active()) {
         float totalWidth  = ui_vp->left * 2.f + ui_vp->right;
         float totalHeight = ui_vp->top * 2.f + ui_vp->bottom;
-        float scaleX      = ModSettings::g_ac_valhalla_ui_settings.hudScaleX;
-        float scaleY      = ModSettings::g_ac_valhalla_ui_settings.hudScaleY;
+        float scaleX      = ModSettings::g_ac_valhalla_settings.hudScaleX;
+        float scaleY      = ModSettings::g_ac_valhalla_settings.hudScaleY;
         ui_vp->left       = (totalWidth - (totalWidth * scaleX)) / 2.f;
         ui_vp->right      = totalWidth * scaleX;
         ui_vp->top        = (totalHeight - (totalHeight * scaleY)) / 2.f;

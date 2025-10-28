@@ -18,6 +18,7 @@ void EngineEntry::on_draw_ui()
         return;
     }
 
+    m_decoupled_pitch->draw("Decoupled Camera Pitch");
 
     if (m_hud_scaleX->draw("HUD Scale X")) {
         update(true);
@@ -56,6 +57,7 @@ void EngineEntry::on_config_save(utility::Config& cfg)
 
 void EngineEntry::update(bool force)
 {
-    ModSettings::g_ac_valhalla_ui_settings.hudScaleX = m_hud_scaleX->value();
-    ModSettings::g_ac_valhalla_ui_settings.hudScaleY = m_hud_scaleY->value();
+    ModSettings::g_ac_valhalla_settings.hudScaleX = m_hud_scaleX->value();
+    ModSettings::g_ac_valhalla_settings.hudScaleY = m_hud_scaleY->value();
+    ModSettings::g_ac_valhalla_settings.decoupledPitch = m_decoupled_pitch->value();
 }

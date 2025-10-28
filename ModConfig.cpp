@@ -6,7 +6,7 @@
 
 
 namespace ModSettings {
-    ACValhallaUISettings g_ac_valhalla_ui_settings;
+    ACValhallaSettings g_ac_valhalla_settings;
 }
 
 Mods::Mods() {
