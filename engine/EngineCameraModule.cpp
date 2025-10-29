@@ -87,6 +87,11 @@ void removePitchFromZUpMatrix(glm::mat4& transform) {
     transform = result;
 }
 
+float roundUp(float val) {
+    return (float)((int)(((int)val + 1) & 0xFFFFFFFE));
+}
+
+
 uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out_textureId, float* out_textureScaleBias, float* out_viewport, float* out_scissorRect,
                                               float* out_scissorRectInt, float* out_scissorScale, float* projectionParams, glm::mat4* in_viewMatrix,
                                               glm::mat4* out_viewProjectionMatrix, glm::mat4* out_projectionMatrix, glm::mat4* out_inverseViewMatrix,
@@ -118,10 +123,27 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
             context->pastViewMatrix = *in_viewMatrix;
         }
     }
-    return instance->m_onCalcFinalView.call<uintptr_t>(context, out_textureId, out_textureScaleBias, out_viewport, out_scissorRect, out_scissorRectInt, out_scissorScale,
+    auto result = instance->m_onCalcFinalView.call<uintptr_t>(context, out_textureId, out_textureScaleBias, out_viewport, out_scissorRect, out_scissorRectInt, out_scissorScale,
                                                        projectionParams, in_viewMatrix, out_viewProjectionMatrix, out_projectionMatrix, out_inverseViewMatrix,
                                                        out_inverseProjectionMatrix, out_worldToViewMatrix, InFov, out_AspectRatio, nearPlane, farPlane, out_frustumPlanes,
                                                        pGlobalConstants);
+    if (vr->is_hmd_active()) {
+        float offX = out_scissorRect[0] * 2.0f;
+        float offY = out_scissorRect[1] * 2.0f;
+        out_scissorRect[2] += offX;
+        out_scissorRect[3] += offY;
+        out_scissorRect[0] = 0.0f;
+        out_scissorRect[1] = 0.0f;
+        out_scissorRectInt[0] = 0.0f;
+        out_scissorRectInt[1] = 0.0f;
+        out_scissorRectInt[2] = roundUp(out_scissorRect[2]);
+        out_scissorRectInt[3] = roundUp(out_scissorRect[3]);
+
+        out_viewport[2] = out_scissorRect[2];
+        out_viewport[3] = out_scissorRect[3];
+    }
+
+    return result;
 }
 
 uintptr_t EngineCameraModule::onCopyGfxContext(sdk::GfxContext* context, glm::mat4* viewMatrix)

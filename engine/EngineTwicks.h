@@ -17,7 +17,7 @@ namespace EngineTwicks
     inline void DisableBadEffects() {
         spdlog::info("Disabling bad effects");
         ENGINE_TWICKS_RUN_AND_LOG(DisableTAA);
-        ENGINE_TWICKS_RUN_AND_LOG(DisableLetterBox);
+//        ENGINE_TWICKS_RUN_AND_LOG(DisableLetterBox);
     }
 };
 
