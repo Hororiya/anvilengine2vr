@@ -18,7 +18,9 @@ void EngineEntry::on_draw_ui()
         return;
     }
 
-    m_decoupled_pitch->draw("Decoupled Camera Pitch");
+    if(m_decoupled_pitch->draw("Decoupled Camera Pitch")) {
+        update(true);
+    }
 
     if (m_hud_scaleX->draw("HUD Scale X")) {
         update(true);
