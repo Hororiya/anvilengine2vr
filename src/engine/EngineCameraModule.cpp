@@ -94,6 +94,17 @@ uintptr_t EngineCameraModule::onCalcProjection( glm::mat4 *outProjMatrix,
     return (float)((int)(((int)val + 1) & 0xFFFFFFFE));
  }
 
+
+void removePitchFromZUpMatrix(glm::mat4& transform) {
+    // Remove y component and normalize so we have the facing direction
+    const auto forward_dir = glm::normalize(Vector3f{ -transform[1].x, 0.0, -transform[1].y });
+
+    auto result = Y_UP_TO_Z_UP_BASIS * glm::lookAtRH(Vector3f{}, Vector3f{ forward_dir }, Vector3f(0.0f, 1.0f, 0.0f)) * INV_UP_TO_Z_UP_BASIS;
+    result[3] = transform[3];
+    transform = result;
+}
+
+
 uintptr_t EngineCameraModule::onCalcMvp(sdk::Camera* camera, uintptr_t a2, float* pNormalizedViewportRect, float* pOutRenderDimensions, float* pOutAbsoluteViewport,
                                         float* pOutScaledViewport, float* pOutViewportScale, float* viewport, glm::mat4* pOutViewMatrix, glm::mat4* pOutViewProjectionMatrix,
                                         glm::mat4* pOutProjectionMatrix, glm::mat4* pOutInverseViewMatrix, glm::mat4* pOutInverseProjectionMatrix, glm::mat4* pOutInvViewProjMatrix,
@@ -112,6 +123,9 @@ uintptr_t EngineCameraModule::onCalcMvp(sdk::Camera* camera, uintptr_t a2, float
         auto rotation_offset = glm::mat4_cast(glm::quat(vr->get_rotation_offset()));
         rotation_offset[3]   = vr->get_standing_origin();
         auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
+        if(ModSettings::g_ac_odyssey_settings.decoupledPitch) {
+            removePitchFromZUpMatrix(*pOutViewMatrix);
+        }
         *pOutViewMatrix       = *pOutViewMatrix * transform;
     }
 
@@ -150,8 +164,13 @@ glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm
         }
         auto rotation = vr->get_rotation_offset() * hmd_rotation;
         rotation      = glm::quat{ rotation.w, rotation.x, -rotation.z, rotation.y };
-        auto prevRotation = (glm::quat*)((uintptr_t ) node + 0x70);
-        *forward      = *prevRotation * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
+        auto original_rotation_quat = *(glm::quat*)((uintptr_t ) node + 0x70);
+        if(ModSettings::g_ac_odyssey_settings.decoupledPitch) {
+            auto original_rotation = glm::mat4_cast(glm::normalize(original_rotation_quat));
+            removePitchFromZUpMatrix(original_rotation);
+            original_rotation_quat = glm::normalize(glm::quat_cast(original_rotation));
+        }
+        *forward      = original_rotation_quat * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
     }
     return result;
 }
@@ -165,8 +184,8 @@ glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm
     if (vr->is_hmd_active()) {
         float totalWidth  = ui_vp->left * 2.f + ui_vp->right;
         float totalHeight = ui_vp->top * 2.f + ui_vp->bottom;
-        float scaleX      = ModSettings::g_ac_odyssey_ui_settings.hudScaleX;
-        float scaleY      = ModSettings::g_ac_odyssey_ui_settings.hudScaleY;
+        float scaleX      = ModSettings::g_ac_odyssey_settings.hudScaleX;
+        float scaleY      = ModSettings::g_ac_odyssey_settings.hudScaleY;
         ui_vp->left       = (totalWidth - (totalWidth * scaleX)) / 2.f;
         ui_vp->right      = totalWidth * scaleX;
         ui_vp->top        = (totalHeight - (totalHeight * scaleY)) / 2.f;

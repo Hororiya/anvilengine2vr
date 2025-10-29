@@ -5,7 +5,7 @@
 #include <mods/VRConfig.hpp>
 
 namespace ModSettings {
-    ACOdysseyUISettings g_ac_odyssey_ui_settings;
+    ACOdysseySettings g_ac_odyssey_settings;
 }
 
 Mods::Mods() {

@@ -34,10 +34,11 @@ private:
 
     const ModSlider::Ptr m_hud_scaleX{ ModSlider::create(generate_name("HudScaleX"), 0.1, 1.0, 0.4) };
     const ModSlider::Ptr m_hud_scaleY{ ModSlider::create(generate_name("HudScaleY"), 0.1, 1.0, (0.4f * 1024.0f / 1920.0f)) };
+    const ModToggle::Ptr m_decoupled_pitch{ ModToggle::create(generate_name("DecoupledPitch"), false) };
     const ModSlider::Ptr m_tone_map_exposure{ ModSlider::create(generate_name("ToneMapExposure"), -2.0, 2.0, 0.0) };
     const ModCombo::Ptr m_tone_map_algorithm{ ModCombo::create(generate_name("ToneMapAlgorithm"), s_tone_map_algorithms, 0) };
 //    const ModToggle::Ptr m_dlss_fix{ModToggle::create("NvidiaDLSSFix", true)};
 //    const ModSlider::Ptr m_display_distance{ ModSlider::create(generate_name("DisplayDistance"), 0.0, 3.0, 2.0) };
 //    const ModToggle::Ptr m_force_flat_screen{ ModToggle::create(generate_name("Force Flat Screen"), false) };
-    ValueList m_options{*m_hud_scaleX, *m_hud_scaleY, *m_tone_map_exposure, *m_tone_map_algorithm};
+    ValueList m_options{*m_hud_scaleX, *m_hud_scaleY, *m_decoupled_pitch, *m_tone_map_exposure, *m_tone_map_algorithm};
 };

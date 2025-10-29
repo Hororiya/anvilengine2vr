@@ -2,10 +2,12 @@
 
 namespace ModSettings
 {
-    struct ACOdysseyUISettings {
+    struct ACOdysseySettings
+    {
         float hudScaleX{0.4};
         float hudScaleY{0.4 * 1024.0f/1920.0f};
+        bool  decoupledPitch{false};
     };
 
-    extern ACOdysseyUISettings g_ac_odyssey_ui_settings;
+    extern ACOdysseySettings g_ac_odyssey_settings;
 } // namespace ModSettings
