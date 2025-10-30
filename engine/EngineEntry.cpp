@@ -59,7 +59,7 @@ void EngineEntry::on_config_save(utility::Config& cfg)
 
 void EngineEntry::update(bool force)
 {
-    ModSettings::g_ac_valhalla_settings.hudScaleX = m_hud_scaleX->value();
-    ModSettings::g_ac_valhalla_settings.hudScaleY = m_hud_scaleY->value();
-    ModSettings::g_ac_valhalla_settings.decoupledPitch = m_decoupled_pitch->value();
+    ModSettings::g_ac_mirage_settings.hudScaleX = m_hud_scaleX->value();
+    ModSettings::g_ac_mirage_settings.hudScaleY = m_hud_scaleY->value();
+    ModSettings::g_ac_mirage_settings.decoupledPitch = m_decoupled_pitch->value();
 }

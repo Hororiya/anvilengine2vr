@@ -12,7 +12,7 @@ public:
 
     void update(bool force = false);
 
-    [[nodiscard]] inline std::string_view get_name() const override { return "ACValhalla"; }
+    [[nodiscard]] inline std::string_view get_name() const override { return "ACMirage"; }
 
     std::optional<std::string> on_initialize() override;
     void                       on_draw_ui() override;

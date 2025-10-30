@@ -6,7 +6,7 @@
 
 
 namespace ModSettings {
-    ACValhallaSettings g_ac_valhalla_settings;
+    ACMirageSettings g_ac_mirage_settings;
 }
 
 Mods::Mods() {

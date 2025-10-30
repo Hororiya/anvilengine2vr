@@ -87,6 +87,10 @@ void removePitchFromZUpMatrix(glm::mat4& transform) {
     transform = result;
 }
 
+float roundUp(float val) {
+    return (float)((int)(((int)val + 1) & 0xFFFFFFFE));
+}
+
 uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out_textureId, float* out_textureScaleBias, float* out_viewport, float* out_scissorRect,
                                               float* out_scissorRectInt, float* out_scissorScale, float* projectionParams, glm::mat4* in_viewMatrix,
                                               glm::mat4* out_viewProjectionMatrix, glm::mat4* out_projectionMatrix, glm::mat4* out_inverseViewMatrix,
@@ -96,8 +100,8 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
     SCOPE_PROFILER();
     static auto instance     = Get();
     static auto vr           = VR::get();
-    static auto g_current_ui = (uintptr_t**)memory::g_current_ui_pointer_addr();
-    bool        bIsShowingUI = *g_current_ui;
+    static auto g_is_showing_ui = (uint8_t*)memory::g_is_showing_ui();
+    bool        bIsShowingUI = g_is_showing_ui && (*g_is_showing_ui != 0xFF);
     if (vr->is_hmd_active() && !bIsShowingUI) {
         auto        eye           = vr->get_current_eye_transform();
         static auto hmd_transform = vr->get_transform(0);
@@ -107,7 +111,7 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
         auto rotation_offset = glm::mat4_cast(glm::quat(vr->get_rotation_offset()));
         rotation_offset[3]   = vr->get_standing_origin();
         auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
-        if(ModSettings::g_ac_valhalla_settings.decoupledPitch) {
+        if(ModSettings::g_ac_mirage_settings.decoupledPitch) {
             removePitchFromZUpMatrix(*in_viewMatrix);
         }
         *in_viewMatrix       = *in_viewMatrix * transform;
@@ -118,10 +122,27 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
             context->pastViewMatrix = *in_viewMatrix;
         }
     }
-    return instance->m_onCalcFinalView.call<uintptr_t>(context, out_textureId, out_textureScaleBias, out_viewport, out_scissorRect, out_scissorRectInt, out_scissorScale,
+    auto result = instance->m_onCalcFinalView.call<uintptr_t>(context, out_textureId, out_textureScaleBias, out_viewport, out_scissorRect, out_scissorRectInt, out_scissorScale,
                                                        projectionParams, in_viewMatrix, out_viewProjectionMatrix, out_projectionMatrix, out_inverseViewMatrix,
                                                        out_inverseProjectionMatrix, out_worldToViewMatrix, InFov, out_AspectRatio, nearPlane, farPlane, out_frustumPlanes,
                                                        pGlobalConstants);
+    if (vr->is_hmd_active()) {
+        float offX = out_scissorRect[0] * 2.0f;
+        float offY = out_scissorRect[1] * 2.0f;
+        out_scissorRect[2] += offX;
+        out_scissorRect[3] += offY;
+        out_scissorRect[0] = 0.0f;
+        out_scissorRect[1] = 0.0f;
+        out_scissorRectInt[0] = 0.0f;
+        out_scissorRectInt[1] = 0.0f;
+        out_scissorRectInt[2] = roundUp(out_scissorRect[2]);
+        out_scissorRectInt[3] = roundUp(out_scissorRect[3]);
+
+        out_viewport[2] = out_scissorRect[2];
+        out_viewport[3] = out_scissorRect[3];
+    }
+
+    return result;
 }
 
 uintptr_t EngineCameraModule::onCopyGfxContext(sdk::GfxContext* context, glm::mat4* viewMatrix)
@@ -167,7 +188,7 @@ glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm
         auto rotation = vr->get_rotation_offset() * hmd_rotation;
         rotation      = glm::quat{ rotation.w, rotation.x, -rotation.z, rotation.y };
         auto original_rotation_quat = node->prevRotation;
-        if(ModSettings::g_ac_valhalla_settings.decoupledPitch) {
+        if(ModSettings::g_ac_mirage_settings.decoupledPitch) {
             auto original_rotation = glm::mat4_cast(glm::normalize(node->prevRotation));
             removePitchFromZUpMatrix(original_rotation);
             original_rotation_quat = glm::normalize(glm::quat_cast(original_rotation));
@@ -186,8 +207,8 @@ void EngineCameraModule::onCalcUIViewportHook()
     if (vr->is_hmd_active()) {
         float totalWidth  = ui_vp->left * 2.f + ui_vp->right;
         float totalHeight = ui_vp->top * 2.f + ui_vp->bottom;
-        float scaleX      = ModSettings::g_ac_valhalla_settings.hudScaleX;
-        float scaleY      = ModSettings::g_ac_valhalla_settings.hudScaleY;
+        float scaleX      = ModSettings::g_ac_mirage_settings.hudScaleX;
+        float scaleY      = ModSettings::g_ac_mirage_settings.hudScaleY;
         ui_vp->left       = (totalWidth - (totalWidth * scaleX)) / 2.f;
         ui_vp->right      = totalWidth * scaleX;
         ui_vp->top        = (totalHeight - (totalHeight * scaleY)) / 2.f;
