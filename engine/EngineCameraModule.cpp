@@ -48,14 +48,15 @@ void EngineCameraModule::InstallHooks()
     }
 }
 
+thread_local bool inside_calc_mvp = false;
+
 void EngineCameraModule::onCalcProjection(glm::mat4* outProjMatrix, float nearPlane, float farPlane, float fov, float aspectRatio, sdk::Viewport* viewport)
 {
     SCOPE_PROFILER();
     static auto instance     = Get();
     static auto vr           = VR::get();
-    static auto g_current_ui = (uintptr_t**)memory::g_current_ui_pointer_addr();
     instance->m_onCalcProjection.call<void>(outProjMatrix, nearPlane, farPlane, fov, aspectRatio, viewport);
-    if (vr->is_hmd_active() && farPlane > 1201.f) {
+    if (vr->is_hmd_active() && (inside_calc_mvp || farPlane > 1201.f)) {
         auto      frustum    = vr->get_runtime()->frustums[0];
         float     sum_rl     = (frustum[1] + frustum[0]);
         float     sum_tb     = (frustum[2] + frustum[3]);
@@ -103,6 +104,7 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
     static auto g_is_showing_ui = (uint8_t*)memory::g_is_showing_ui();
     bool        bIsShowingUI = g_is_showing_ui && (*g_is_showing_ui != 0xFF);
     if (vr->is_hmd_active() && !bIsShowingUI) {
+        inside_calc_mvp = true;
         auto        eye           = vr->get_current_eye_transform();
         static auto hmd_transform = vr->get_transform(0);
         if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
@@ -142,6 +144,7 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
         out_viewport[3] = out_scissorRect[3];
     }
 
+    inside_calc_mvp = false;
     return result;
 }
 
