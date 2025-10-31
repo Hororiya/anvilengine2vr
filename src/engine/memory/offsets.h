@@ -5,7 +5,7 @@ namespace memory
 {
 
     inline uintptr_t calc_projection_fn_addr() {
-        static const auto pattern = "48 89 E0 53 48 81 EC 90 00 00 00 0F 29 70 E8 48";
+        static const auto pattern = "48 89 E0 53 48 81 EC 90 00 00 00 0F 29 70 E8 48 89 CB F3";
         static auto addr    = FuncRelocation("calc_projection_fn_addr", pattern, 0xbd325a0);
         return addr;
     }
