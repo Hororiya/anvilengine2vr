@@ -28,7 +28,6 @@ uintptr_t EngineRendererModule::on_begin_engine_frame()
     if (g_framework->is_ready()) {
         static auto vr = VR::get();
         vr->m_engine_frame_count++;
-        vr->on_engine_tick(nullptr);
         g_framework->enable_engine_thread();
         g_framework->run_imgui_frame(false);
     }
@@ -42,11 +41,11 @@ uintptr_t EngineRendererModule::on_begin_render_frame(struct GlobalContext* cont
     if (g_framework->is_ready()) {
         static auto vr           = VR::get();
         vr->m_render_frame_count = vr->m_engine_frame_count;
-        vr->on_begin_rendering(nullptr);
-        auto result                 = instance->m_beginRenderFrameHook.call<uintptr_t>(context);
+        vr->on_begin_rendering(vr->m_render_frame_count);
+        vr->update_hmd_state(vr->m_engine_frame_count);
+        const auto result                 = instance->m_beginRenderFrameHook.call<uintptr_t>(context);
         vr->m_presenter_frame_count = vr->m_render_frame_count;
         return result;
     }
     return instance->m_beginRenderFrameHook.call<uintptr_t>(context);
-    ;
 }
