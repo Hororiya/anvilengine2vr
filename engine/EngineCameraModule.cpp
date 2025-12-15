@@ -105,20 +105,16 @@ uintptr_t EngineCameraModule::onCalcFinalView(sdk::GfxContext* context, int* out
     bool        bIsShowingUI = g_is_showing_ui && (*g_is_showing_ui != 0xFF);
     if (vr->is_hmd_active() && !bIsShowingUI) {
         inside_calc_mvp = true;
-        auto        eye           = vr->get_current_eye_transform();
-        static auto hmd_transform = vr->get_transform(0);
-        if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
-            hmd_transform = vr->get_transform(0);
-        }
-        auto rotation_offset = glm::mat4_cast(glm::quat(vr->get_rotation_offset()));
-        rotation_offset[3]   = vr->get_standing_origin();
-        auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
+        const auto        eye           = vr->get_current_eye_transform();
+        const auto hmd_transform = vr->get_transform(0);
+        const auto rotation_offset = vr->get_transform_offset();
+        const auto transform       = Y_UP_TO_Z_UP_BASIS * rotation_offset * hmd_transform * eye * INV_UP_TO_Z_UP_BASIS;
         if(ModSettings::g_ac_mirage_settings.decoupledPitch) {
             removePitchFromZUpMatrix(*in_viewMatrix);
         }
         *in_viewMatrix       = *in_viewMatrix * transform;
         static glm::mat4 copies[2]{ glm::mat4{ 1.0 }, glm::mat4{ 1.0 } };
-        auto             frame = vr->m_presenter_frame_count;
+        const auto             frame = vr->m_presenter_frame_count;
         copies[frame % 2]      = *in_viewMatrix;
         if (context->pOverrideViewMatrix) {
             context->pastViewMatrix = *in_viewMatrix;
@@ -184,19 +180,15 @@ glm::vec4* EngineCameraModule::onCameraGetForwardHook(sdk::CameraNode* node, glm
     static auto instance = Get();
     auto        result   = instance->m_onCameraGetForwardHook.call<glm::vec4*>(node, forward);
     if (vr->is_hmd_active()) {
-        static auto hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
-        if (vr->get_current_render_eye() == VRRuntime::Eye::LEFT) {
-            hmd_rotation = glm::normalize(glm::quat(vr->get_rotation(0)));
-        }
-        auto rotation = vr->get_rotation_offset() * hmd_rotation;
-        rotation      = glm::quat{ rotation.w, rotation.x, -rotation.z, rotation.y };
+        auto hmd_rotation = vr->get_transform(0);
+        auto rotation = Y_UP_TO_Z_UP_BASIS * vr->get_transform_offset() * hmd_rotation * INV_UP_TO_Z_UP_BASIS;
         auto original_rotation_quat = node->prevRotation;
         if(ModSettings::g_ac_mirage_settings.decoupledPitch) {
             auto original_rotation = glm::mat4_cast(glm::normalize(node->prevRotation));
             removePitchFromZUpMatrix(original_rotation);
             original_rotation_quat = glm::normalize(glm::quat_cast(original_rotation));
         }
-        *forward = original_rotation_quat * rotation * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
+        *forward = original_rotation_quat * glm::normalize(glm::quat_cast(rotation)) * glm::vec4{ 0.0, 1.0, 0.0, 0.0 };
     }
     return result;
 }
