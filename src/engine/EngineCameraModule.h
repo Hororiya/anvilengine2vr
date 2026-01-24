@@ -2,8 +2,6 @@
 
 #include <glm/detail/type_mat4x4.hpp>
 #include <glm/detail/type_quat.hpp>
-#include <glm/fwd.hpp>
-#include <memory/FunctionHook.h>
 #include <safetyhook/inline_hook.hpp>
 
 namespace sdk
@@ -18,7 +16,7 @@ class EngineCameraModule
 public:
     void InstallHooks();
 
-    inline static EngineCameraModule* Get()
+    static EngineCameraModule* Get()
     {
         static auto instance(new EngineCameraModule);
         return instance;

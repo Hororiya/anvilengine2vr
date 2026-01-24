@@ -1,6 +1,5 @@
 #include "ModConfig.h"
 #include "Framework.hpp"
-#include <engine/EngineTwicks.h>
 #include "dgxiProxy.h"
 
 bool verifyLeftHandedCoordinates() {
@@ -21,7 +20,6 @@ bool verifyLeftHandedCoordinates() {
 }
 
 void InitThread(HINSTANCE hModule) {
-//    EngineTwicks::DisableBadEffects();
     Sleep(5000);
     g_framework = std::make_unique<Framework>(hModule);
 #ifdef GLM_FORCE_LEFT_HANDED
@@ -30,10 +28,6 @@ void InitThread(HINSTANCE hModule) {
 #else
     spdlog::info("GLM_FORCE_LEFT_HANDED is not defined");
 #endif
-//    g_d3d12_callback_manager = new D3D12CallBackManager(hModule);
-//    CreationEngineEntry::Get();
-//    VRFramework::XInputHook::Get()->hook_gaming_input();
-    //Hooks::Install();
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)

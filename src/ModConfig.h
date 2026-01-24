@@ -2,12 +2,12 @@
 
 namespace ModSettings
 {
-    struct ACOdysseySettings
+    struct ModSpecificSettings
     {
         float hudScaleX{0.4};
         float hudScaleY{0.4 * 1024.0f/1920.0f};
         bool  decoupledPitch{false};
     };
 
-    extern ACOdysseySettings g_ac_odyssey_settings;
+    extern ModSpecificSettings g_mod_settings;
 } // namespace ModSettings
