@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.27)
 
 project(
-  assasins_creed_odyssey_vr
+  anvil_vr
   VERSION 1.0.0
   LANGUAGES C CXX
 )
+
+set(GAME_TARGETS Odyssey Origins)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,64 +24,8 @@ FetchContent_MakeAvailable(vrframework)
 add_library(common INTERFACE)
 target_link_libraries(vr_framework PRIVATE common)
 
-
-file(
-  GLOB_RECURSE
-  headers
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
-)
-
-file(
-  GLOB_RECURSE
-  sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-)
-
-add_library(${PROJECT_NAME} SHARED ${headers} ${sources})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
-#target_compile_definitions(common INTERFACE DEBUG_PROFILING_ENABLED)
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-target_link_libraries("${PROJECT_NAME}" PUBLIC common vr_framework::vr_framework)
-
-target_include_directories(
-  ${PROJECT_NAME}
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-)
-
-
-
-target_precompile_headers(
-  ${PROJECT_NAME}
-  PRIVATE
-    pch/pch.h
-)
-
-target_compile_features(
-  ${PROJECT_NAME}
-  PUBLIC
-    cxx_std_23
-)
-
-target_compile_options(
-  ${PROJECT_NAME}
-  PUBLIC
-    $<$<CONFIG:Debug>:/EHa>
-)
-
-set_target_properties(
-  ${PROJECT_NAME}
-  PROPERTIES
-    LINK_FLAGS
-    "/DELAYLOAD:openvr_api.dll /DELAYLOAD:d3d12.dll /DELAYLOAD:D3DCOMPILER_47.dll"
-)
-
 if(NOT DEFINED HOOK_METHOD)
-    set(HOOK_METHOD "dxgi")
+  set(HOOK_METHOD "dxgi")
 endif()
 
 if(HOOK_METHOD STREQUAL "dinput8")
@@ -98,36 +44,116 @@ if(SIGNATURE_SCAN)
   target_compile_definitions(common INTERFACE SIGNATURE_SCAN)
 endif()
 
-install(
-  TARGETS ${PROJECT_NAME}
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+function(configure_game_target GAME_TARGET)
+  set(TARGET_NAME "anvil_vr_${GAME_TARGET}")
+  set(GAME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/games/${GAME_TARGET}")
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(BUILD_NAME Debug)
-else()
-  set(BUILD_NAME Release)
-endif()
+  file(
+    GLOB_RECURSE
+    headers
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
+      ${GAME_DIR}/*.h
+      ${GAME_DIR}/*.hpp
+  )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OUTPUT_NAME})
+  file(
+    GLOB_RECURSE
+    sources
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+      ${GAME_DIR}/*.cpp
+  )
 
-add_custom_command(
-  TARGET ${PROJECT_NAME}
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/assasins_creed_odyssey_vr
-  COMMAND
-    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/assasins_creed_odyssey_vr
-)
+  add_library(${TARGET_NAME} SHARED ${headers} ${sources})
 
-add_custom_command(
-        TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND
-       ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Assassins Creed Odyssey\\$<TARGET_FILE_NAME:${PROJECT_NAME}>"
-)
+  target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  add_library(${TARGET_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
+  target_link_libraries(${TARGET_NAME} PUBLIC common)
 
-set_property(
-  TARGET ${PROJECT_NAME}
-  APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${OUTPUT_DLLS} ${OUTPUT_PDBS} ${CPM_SOURCE_CACHE} ${CMAKE_CURRENT_BINARY_DIR}/_deps
-)
+  target_link_libraries(${TARGET_NAME} PUBLIC vr_framework::vr_framework)
+
+  target_include_directories(
+    ${TARGET_NAME}
+    PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+      $<BUILD_INTERFACE:${GAME_DIR}>
+  )
+
+  target_precompile_headers(
+    ${TARGET_NAME}
+    PRIVATE
+      pch/pch.h
+  )
+
+  target_compile_features(
+    ${TARGET_NAME}
+    PUBLIC
+      cxx_std_23
+  )
+
+  target_compile_options(
+    ${TARGET_NAME}
+    PUBLIC
+      $<$<CONFIG:Debug>:/EHa>
+  )
+
+  set_target_properties(
+    ${TARGET_NAME}
+    PROPERTIES
+      LINK_FLAGS
+      "/DELAYLOAD:openvr_api.dll /DELAYLOAD:d3d12.dll /DELAYLOAD:D3DCOMPILER_47.dll"
+      OUTPUT_NAME
+      ${OUTPUT_NAME}
+      RUNTIME_OUTPUT_DIRECTORY
+      "${CMAKE_CURRENT_BINARY_DIR}/bin/${GAME_TARGET}"
+      LIBRARY_OUTPUT_DIRECTORY
+      "${CMAKE_CURRENT_BINARY_DIR}/bin/${GAME_TARGET}"
+      ARCHIVE_OUTPUT_DIRECTORY
+      "${CMAKE_CURRENT_BINARY_DIR}/bin/${GAME_TARGET}"
+  )
+
+  install(
+    TARGETS ${TARGET_NAME}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(BUILD_NAME Debug)
+  else()
+    set(BUILD_NAME Release)
+  endif()
+
+  if(GAME_TARGET STREQUAL "Odyssey")
+    set(GAME_ARTIFACT_DIR "anvil_vr_odyssey")
+    set(GAME_STEAM_PATH "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Assassins Creed Odyssey")
+  elseif(GAME_TARGET STREQUAL "Origins")
+    set(GAME_ARTIFACT_DIR "anvil_vr_origins")
+    set(GAME_STEAM_PATH "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Assassins Creed Origins")
+  endif()
+
+  add_custom_command(
+    TARGET ${TARGET_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/${GAME_ARTIFACT_DIR}
+    COMMAND
+      ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/artifact/Mod${BUILD_NAME}/${GAME_ARTIFACT_DIR}
+  )
+
+  add_custom_command(
+    TARGET ${TARGET_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> "${GAME_STEAM_PATH}\\$<TARGET_FILE_NAME:${TARGET_NAME}>"
+  )
+
+  set_property(
+    TARGET ${TARGET_NAME}
+    APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${OUTPUT_DLLS} ${OUTPUT_PDBS} ${CPM_SOURCE_CACHE} ${CMAKE_CURRENT_BINARY_DIR}/_deps
+  )
+endfunction()
+
+foreach(GAME_TARGET IN LISTS GAME_TARGETS)
+  configure_game_target(${GAME_TARGET})
+endforeach()

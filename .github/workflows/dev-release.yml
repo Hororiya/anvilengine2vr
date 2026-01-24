@@ -12,6 +12,8 @@ jobs:
     strategy:
       matrix:
         preset: [release-no-debug-msvc]
+        # game: [Odyssey, Origins]
+        game: [Odyssey]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,13 +40,14 @@ jobs:
           CMAKE_BUILD_TYPE: Release
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build/build-${{matrix.preset}} --config Release
+        run: cmake --build ${{github.workspace}}/build/build-${{matrix.preset}} --config Release --target anvil_vr_${{matrix.game}}
 
       - name: Create Package
         run: |
           $Version = "${{ steps.get_version.outputs.version }}"
-          $OpenXRZipName = "acodyssey-vr-openxr-$Version"
-          $OpenVRZipName = "acodyssey-vr-openvr-$Version"
+          $GameName = "${{ matrix.game }}"
+          $OpenXRZipName = "$GameName-vr-openxr-$Version"
+          $OpenVRZipName = "$GameName-vr-openvr-$Version"
           
           # Create package directories
           mkdir ${{github.workspace}}/package-openxr
@@ -52,16 +55,16 @@ jobs:
           mkdir ${{github.workspace}}/symbols
           
           # Copy OpenXR release files
-          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.dll" "${{github.workspace}}/package-openxr/"
+          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/bin/${{ matrix.game }}/Release/dxgi.dll" "${{github.workspace}}/package-openxr/"
           #Copy-Item "${{github.workspace}}/extern/vrframework/shipping/openxr_loader.dll" "${{github.workspace}}/package-openxr/"
           
           # Copy OpenVR release files
-          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.dll" "${{github.workspace}}/package-openvr/"
+          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/bin/${{ matrix.game }}/Release/dxgi.dll" "${{github.workspace}}/package-openvr/"
           Copy-Item "${{github.workspace}}/extern/vrframework/shipping/openvr_api.dll" "${{github.workspace}}/package-openvr/"
           
           # Copy debug symbols
           # Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.pdb" "${{github.workspace}}/symbols/"
-          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/Release/dxgi.dll" "${{github.workspace}}/symbols/"
+          Copy-Item "${{github.workspace}}/build/build-${{matrix.preset}}/bin/${{ matrix.game }}/Release/dxgi.dll" "${{github.workspace}}/symbols/"
           
           # Create packages
           7z a "${{github.workspace}}/$OpenXRZipName.zip" "${{github.workspace}}/package-openxr/*"
@@ -72,7 +75,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: acodyssey-vr-*.zip
+          files: ${{ matrix.game }}-vr-*.zip
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -81,20 +84,20 @@ jobs:
       - name: Upload OpenXR artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.preset }}-openxr-${{ steps.get_version.outputs.version }}
+          name: ${{ matrix.game }}-${{ matrix.preset }}-openxr-${{ steps.get_version.outputs.version }}
           path: ${{github.workspace}}/package-openxr/*
           if-no-files-found: error
 
       - name: Upload OpenVR artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.preset }}-openvr-${{ steps.get_version.outputs.version }}
+          name: ${{ matrix.game }}-${{ matrix.preset }}-openvr-${{ steps.get_version.outputs.version }}
           path: ${{github.workspace}}/package-openvr/*
           if-no-files-found: error
 
       - name: Upload debug symbols
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.preset }}-${{ steps.get_version.outputs.version }}-symbols
+          name: ${{ matrix.game }}-${{ matrix.preset }}-${{ steps.get_version.outputs.version }}-symbols
           path: ${{github.workspace}}/symbols/*
           if-no-files-found: error

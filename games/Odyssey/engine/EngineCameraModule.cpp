@@ -1,5 +1,5 @@
 #include "EngineCameraModule.h"
-#include "engine/memory/offsets.h"
+#include "memory/offsets.h"
 #include <ModConfig.h>
 #include <mods/VR.hpp>
 #include <safetyhook/easy.hpp>
