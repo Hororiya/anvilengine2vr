@@ -1,6 +1,16 @@
-# Assassin's Creed Odyssey VR Mod
+# AnvilEngine2VR - Assassin's Creed VR Mod
 
-A VR mod for Assassin's Creed Odyssey that enables immersive virtual reality gameplay using OpenXR.
+A VR mod for Assassin's Creed games using the AnvilNext 2.0 engine that enables immersive virtual reality gameplay using OpenXR.
+
+## Supported Games
+
+- Assassin's Creed Odyssey
+- Assassin's Creed Valhalla
+- Assassin's Creed Mirage
+
+### Planned / In Development
+
+- Assassin's Creed Origins (see [development guide](games/Origins/README.md))
 
 ## Features
 
@@ -12,14 +22,14 @@ A VR mod for Assassin's Creed Odyssey that enables immersive virtual reality gam
 
 ## Requirements
 
-- Assassin's Creed Odyssey
+- One of the supported Assassin's Creed games
 - A VR headset compatible with OpenXR
 - SteamVR or other OpenXR-compatible runtime
 
 ## Installation
 
-1. Download the latest release from the [Releases](https://github.com/mutars/acodyssey-vr/releases) page
-2. Extract the contents to your Assassin's Creed Odyssey game folder (where `ACOdyssey.exe` is located)
+1. Download the latest release for your game from the [Releases](https://github.com/mutars/anvilengine2vr/releases) page
+2. Extract the contents to your game folder (where the game executable is located)
 3. The mod uses DXGI hooking by default - the `dxgi.dll` file should be placed in the game root directory
 
 ## In-Game Settings
@@ -49,8 +59,8 @@ For the best VR experience, configure the following in-game settings:
 
 1. Clone the repository with submodules:
    ```bash
-   git clone --recursive https://github.com/mutars/acodyssey-vr.git
-   cd acodyssey-vr
+   git clone --recursive https://github.com/mutars/anvilengine2vr.git
+   cd anvilengine2vr
    ```
 
 2. Configure and build:
@@ -59,7 +69,7 @@ For the best VR experience, configure the following in-game settings:
    cmake --build build --config Release
    ```
 
-3. The built DLL will be placed in the `artifact` folder
+3. The built DLLs will be placed in the `artifact` folder, organized by game
 
 ## Credits
 
