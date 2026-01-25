@@ -6,7 +6,7 @@ project(
   LANGUAGES C CXX
 )
 
-set(GAME_TARGETS Odyssey Origins Valhalla)
+set(GAME_TARGETS Odyssey Origins Valhalla Mirage)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -130,6 +130,12 @@ function(configure_game_target GAME_TARGET)
   elseif(GAME_TARGET STREQUAL "Origins")
     set(GAME_ARTIFACT_DIR "anvil_vr_origins")
     set(GAME_STEAM_PATH "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Assassins Creed Origins")
+  elseif(GAME_TARGET STREQUAL "Valhalla")
+    set(GAME_ARTIFACT_DIR "assasins_creed_valhalla_vr")
+    set(GAME_STEAM_PATH "C:\\UbisoftGames\\Assassin's Creed Valhalla")
+  elseif(GAME_TARGET STREQUAL "Mirage")
+    set(GAME_ARTIFACT_DIR "assasins_creed_mirage_vr")
+    set(GAME_STEAM_PATH "C:\\UbisoftGames\\Assassin's Creed Mirage")
   endif()
 
   add_custom_command(
