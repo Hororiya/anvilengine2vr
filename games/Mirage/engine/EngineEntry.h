@@ -4,18 +4,19 @@
 class EngineEntry : public Mod
 {
 public:
-    inline static std::shared_ptr<EngineEntry>& Get()
+    static std::shared_ptr<EngineEntry>& Get()
     {
-        static std::shared_ptr<EngineEntry> instance{ std::make_shared<EngineEntry>() };
+        static auto instance{ std::make_shared<EngineEntry>() };
         return instance;
     }
 
     void update(bool force = false);
 
-    [[nodiscard]] inline std::string_view get_name() const override { return "ACMirage"; }
+    [[nodiscard]] std::string_view get_name() const override { return "ACMirage"; }
 
     std::optional<std::string> on_initialize() override;
     void                       on_draw_ui() override;
+    void                       on_pre_imgui_frame() override;
     void                       on_config_load(const utility::Config& cfg, bool set_defaults) override;
     void                       on_config_save(utility::Config& cfg) override;
 
