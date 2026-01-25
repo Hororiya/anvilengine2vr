@@ -6,7 +6,7 @@ project(
   LANGUAGES C CXX
 )
 
-set(GAME_TARGETS Odyssey Origins)
+set(GAME_TARGETS Odyssey Origins Valhalla)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

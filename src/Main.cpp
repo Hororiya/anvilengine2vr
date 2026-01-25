@@ -1,6 +1,7 @@
 #include "ModConfig.h"
 #include "Framework.hpp"
 #include "dgxiProxy.h"
+#include <engine/EngineTwicks.h>
 
 bool verifyLeftHandedCoordinates() {
     // Create forward vector (in left-handed, +Z is forward)
@@ -20,6 +21,7 @@ bool verifyLeftHandedCoordinates() {
 }
 
 void InitThread(HINSTANCE hModule) {
+    EngineTwicks::DisableBadEffects();
     Sleep(5000);
     g_framework = std::make_unique<Framework>(hModule);
 #ifdef GLM_FORCE_LEFT_HANDED
