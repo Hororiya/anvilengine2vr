@@ -535,3 +535,12 @@ FodyWeavers.xsd
 build/
 
 artifact/*
+# Local verification/build trees; source and artifact reports remain versioned.
+/build-*/
+
+# Portable preview sessions and compiler-generated import libraries.
+/tools/shadows-release/state/
+/tools/shadows-release/logs/
+/tools/shadows-release/bin/
+/*.exp
+/*.lib

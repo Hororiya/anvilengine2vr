@@ -78,3 +78,17 @@ This project is based on [REFramework](https://github.com/praydog/REFramework) b
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Experimental Shadows VR 0.1 preview
+
+The local-release path for Assassin's Creed Shadows is documented in
+[the preview README](tools/shadows-release/README.md). It provides game-world
+stereo and head tracking with a standalone Windows build, portable launchers,
+main-view model LOD control and the currently tested temporary DLSS history-reset
+workaround. This is an experimental derivative preview, not a completed per-eye
+temporal reconstruction implementation or an official upstream release.
+
+Build native targets with `cmake -S tools/shadows-release -B build/shadows-release -A x64`,
+then follow [BUILD.md](tools/shadows-release/BUILD.md) and run
+`python tools/shadows-release/package_release.py --version 0.1` to create local
+runtime/source ZIPs. No private `vrframework` submodule is needed for this path.
+The package builder does not upload files or create GitHub releases.

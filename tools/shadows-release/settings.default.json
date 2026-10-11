@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "sourceWidth": 3840,
+  "sourceHeight": 2160,
+  "cameraForwardGameUnits": 2.5,
+  "geometryLodBias": -0.5,
+  "historyResetMode": "diagnostic-every-frame",
+  "historyResetEnabled": true,
+  "historyResetNotice": "Diagnostic workaround: resets DLSS history every eye frame to prevent cross-eye history contamination. This removes temporal accumulation and may reduce image clarity.",
+  "nativeStereo": true,
+  "pairedEyes": true,
+  "hmdProjection": true,
+  "openxrLoaderLinkage": "static"
+}
